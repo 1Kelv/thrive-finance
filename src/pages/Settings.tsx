@@ -26,17 +26,6 @@ export const Settings: React.FC = () => {
     }
   }, [user]);
 
-  // Add this new function after the useEffect
-const loadSecuritySettings = async () => {
-  if (!user) return;
-  
-  try {
-    const settings = await securityService.getSecuritySettings(user.id);
-    setTwoFactorEnabled(settings?.two_factor_enabled || false);
-  } catch (error) {
-    console.error('Error loading security settings:', error);
-  }
-};
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -38,10 +38,6 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data, title,
     }).format(value);
   };
 
-  const renderLabel = (entry: any) => {
-    return `${entry.name} (${entry.percentage.toFixed(1)}%)`;
-  };
-
   return (
     <div className="card">
       <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem' }}>
@@ -55,12 +51,15 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data, title,
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={renderLabel}
+            label={(props: any) => {
+              const item = data.find(d => d.name === props.name);
+              return item ? `${item.name} (${item.percentage.toFixed(1)}%)` : '';
+            }}
             outerRadius={80}
             fill="#8884d8"
             dataKey="value"
           >
-            {data.map((entry, index) => (
+            {data.map((_item, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

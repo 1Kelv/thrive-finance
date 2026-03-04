@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { ThriveLogoFull } from '../assets/logos/ThriveLogoFull';
 import { ThriveIcon } from '../assets/logos/ThriveIcon';
 import { ThriveBanner } from '../assets/logos/ThriveBanner';
