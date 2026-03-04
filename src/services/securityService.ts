@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { SecuritySettings, OTPCode } from '../types';
-
+import type { SecuritySettings } from '../types';
 export const securityService = {
   // Get user security settings
   async getSecuritySettings(userId: string): Promise<SecuritySettings | null> {

@@ -20,11 +20,6 @@ export const LogoDownload: React.FC = () => {
     URL.revokeObjectURL(svgUrl);
   };
 
-  const fullLogoRef = useRef<SVGSVGElement>(null);
-  const iconWithBgRef = useRef<SVGSVGElement>(null);
-  const iconNoBgRef = useRef<SVGSVGElement>(null);
-  const bannerRef = useRef<SVGSVGElement>(null);
-
   return (
     <div style={{ minHeight: '100vh', padding: '2rem', background: 'var(--color-bg-secondary)' }}>
       <div className="container">

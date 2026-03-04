@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/common/Logo';
 import { supabase } from '../lib/supabase';
 import { securityService } from '../services/securityService';
-import type { SecuritySettings } from '../types';
+
 
 export const Settings: React.FC = () => {
   const { user, signOut } = useAuth();
