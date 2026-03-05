@@ -71,35 +71,18 @@ async generateOTP(userId: string, email: string): Promise<string> {
 
   if (error) throw error;
 
-  // Try to send email via Edge Function (production)
-  // Use alert fallback in development
-  const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
-
-  if (isProduction) {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      const fullName = userData?.user?.user_metadata?.full_name;
-
-      const { error: functionError } = await supabase.functions.invoke('send-otp', {
-        body: { email, code, fullName },
-      });
-
-      if (functionError) {
-        console.error('Edge function error:', functionError);
-        // Fallback to alert even in production if email fails
-        alert(`🔐 Email Delivery Issue\n\nYour OTP code is: ${code}\n\nPlease check your email settings or use this code to continue.`);
-      } else {
-        console.log('✅ OTP email sent successfully');
-      }
-    } catch (err) {
-      console.error('Failed to send OTP email:', err);
-      alert(`🔐 Your OTP code is: ${code}\n\n(Email temporarily unavailable)`);
-    }
-  } else {
-    // Development mode - show alert
-    console.log('🔐 OTP CODE (Development):', code);
-    alert(`🔐 Development Mode\n\nYour OTP code is: ${code}\n\n(In production, this will be sent to ${email})`);
-  }
+  // For MVP: Display OTP on screen
+  // Email delivery via Resend planned for future release
+  console.log('🔐 OTP CODE:', code);
+  console.log(`📧 Sending to: ${email}`);
+  
+  alert(
+    `🔐 Your Two-Factor Authentication Code\n\n` +
+    `${code}\n\n` +
+    `This code expires in 5 minutes.\n\n` +
+    `Note: Email delivery coming soon! ` +
+    `For now, use the code above to sign in securely.`
+  );
 
   return code;
 },

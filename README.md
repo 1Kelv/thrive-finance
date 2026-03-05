@@ -63,7 +63,7 @@ Users can review detailed fraud analysis reports and mark transactions as safe o
 ## 🔐 Security
 
 - Email/password authentication with email verification
-- Two-factor authentication (OTP via email)
+- - **Two-Factor Authentication** - OTP-based verification with 6-digit codes that expire in 5 minutes (email delivery planned for v2)
 - Session timeout after 10 minutes of inactivity
 - Row-Level Security (RLS) policies in database
 - HTTPS encryption for all connections
