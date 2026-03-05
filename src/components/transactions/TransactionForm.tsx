@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { TransactionFormData } from '../../types';
 
 interface TransactionFormProps {
@@ -6,28 +6,35 @@ interface TransactionFormProps {
   onCancel: () => void;
 }
 
+const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other Income'];
+const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other Expense'];
+
 export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCancel }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [formData, setFormData] = useState<TransactionFormData>({
     amount: 0,
     category: '',
     type: 'expense',
     description: '',
     date: new Date().toISOString().split('T')[0],
-    is_fraud_flagged: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const categories = {
-    income: ['Salary', 'Freelance', 'Investment', 'Gift', 'Other Income'],
-    expense: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other Expense'],
-  };
+  const categories = formData.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.amount || !formData.category || !formData.description) {
-      setError('Please fill in all required fields');
+      setError('Please fill in all fields');
       return;
     }
 
@@ -50,7 +57,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
 
   return (
     <div className="card">
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
+      <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         Add Transaction
       </h2>
 
@@ -68,12 +75,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Type Selection */}
+        {/* Type */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
             Type *
           </label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexDirection: isMobile ? 'column' : 'row' }}>
             <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               <input
                 type="radio"
@@ -102,7 +109,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
         {/* Amount */}
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="amount" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
-            Amount (£) *
+            Amount *
           </label>
           <input
             id="amount"
@@ -113,13 +120,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
             onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
             placeholder="0.00"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.625rem',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-            }}
           />
         </div>
 
@@ -133,17 +133,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.625rem',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-              backgroundColor: 'white',
-            }}
           >
             <option value="">Select a category</option>
-            {categories[formData.type].map((cat) => (
+            {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
@@ -161,15 +153,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
             type="text"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="e.g., Grocery shopping at Tesco"
+            placeholder="e.g., Grocery shopping"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.625rem',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-            }}
           />
         </div>
 
@@ -184,18 +169,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
             value={formData.date}
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.625rem',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-            }}
           />
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: '1rem' 
+        }}>
           <button
             type="submit"
             disabled={loading}

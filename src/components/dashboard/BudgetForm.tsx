@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { BudgetFormData } from '../../types';
 
 interface BudgetFormProps {
@@ -8,6 +8,14 @@ interface BudgetFormProps {
 }
 
 export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, initialData }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [formData, setFormData] = useState<BudgetFormData>(
     initialData || {
       category: '',
@@ -47,7 +55,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, init
 
   return (
     <div className="card">
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
+      <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         {initialData ? 'Edit Budget' : 'Create Budget'}
       </h2>
 
@@ -75,14 +83,6 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, init
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.625rem',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-              backgroundColor: 'white',
-            }}
           >
             <option value="">Select a category</option>
             {expenseCategories.map((cat) => (
@@ -96,7 +96,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, init
         {/* Amount */}
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="amount" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
-            Budget Amount (£) *
+            Budget Amount *
           </label>
           <input
             id="amount"
@@ -107,13 +107,6 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, init
             onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
             placeholder="0.00"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.625rem',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.875rem',
-            }}
           />
         </div>
 
@@ -122,7 +115,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, init
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
             Period *
           </label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexDirection: isMobile ? 'column' : 'row' }}>
             <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               <input
                 type="radio"
@@ -149,7 +142,7 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({ onSubmit, onCancel, init
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem' }}>
           <button
             type="submit"
             disabled={loading}
