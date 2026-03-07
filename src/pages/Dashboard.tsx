@@ -11,14 +11,17 @@ import { RiskScoreCard } from '../components/dashboard/RiskScoreCard';
 import { BudgetCard } from '../components/dashboard/BudgetCard';
 import { BudgetForm } from '../components/dashboard/BudgetForm';
 import { FraudDetailModal } from '../components/dashboard/FraudDetailModal';
+import { FeedbackModal } from '../components/common/FeedbackModal';
 import { transactionService } from '../services/transactionService';
 import { budgetService } from '../services/budgetService';
+import { feedbackService } from '../services/feedbackService';
 import { getCategoryBreakdown, getMonthlyTrends } from '../utils/chartUtils';
 import { calculateUserRiskScore } from '../utils/fraudDetection';
 import { getAllBudgetProgress } from '../utils/budgetUtils';
 import { exportToCSV } from '../utils/exportUtils';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';
 import type { Transaction, TransactionFormData, Budget, BudgetFormData } from '../types';
+import type { FeedbackData } from '../services/feedbackService';
 
 export const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -42,6 +45,7 @@ export const Dashboard: React.FC = () => {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   
   const [selectedFraudTransaction, setSelectedFraudTransaction] = useState<Transaction | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // Session timeout (10 minutes)
   useSessionTimeout(10);
@@ -139,6 +143,15 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleSubmitFeedback = async (data: FeedbackData) => {
+    try {
+      await feedbackService.submitFeedback(user!.id, user!.email!, data);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      throw error;
+    }
+  };
+
   const handleExportCSV = () => {
     exportToCSV(transactions, 'thrive-transactions.csv');
   };
@@ -226,6 +239,13 @@ export const Dashboard: React.FC = () => {
                   📥 Export CSV
                 </button>
               )}
+              <button 
+                onClick={() => setShowFeedbackModal(true)}
+                className="btn btn-outline"
+                style={isMobile ? {} : { width: 'auto' }}
+              >
+                💬 Feedback
+              </button>
               <button 
                 onClick={() => setShowForm(!showForm)} 
                 className="btn btn-primary"
@@ -476,6 +496,14 @@ export const Dashboard: React.FC = () => {
           onDelete={handleDeleteTransaction}
           onMarkSafe={handleMarkTransactionSafe}
           formatCurrency={formatCurrency}
+        />
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <FeedbackModal
+          onClose={() => setShowFeedbackModal(false)}
+          onSubmit={handleSubmitFeedback}
         />
       )}
     </div>

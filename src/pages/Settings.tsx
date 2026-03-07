@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from '../components/common/Logo';
+import { FeedbackModal } from '../components/common/FeedbackModal';
 import { securityService } from '../services/securityService';
+import { feedbackService } from '../services/feedbackService';
 import { supabase } from '../lib/supabase';
+import type { FeedbackData } from '../services/feedbackService';
 
 const CURRENCIES = [
   { code: 'GBP', name: 'British Pound', symbol: '£', flag: '🇬🇧' },
@@ -35,6 +38,7 @@ export const Settings: React.FC = () => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -101,6 +105,15 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const handleSubmitFeedback = async (data: FeedbackData) => {
+    try {
+      await feedbackService.submitFeedback(user!.id, user!.email!, data);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      throw error;
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
@@ -127,13 +140,22 @@ export const Settings: React.FC = () => {
           >
             <Logo size={isMobile ? 50 : 60} showText={true} />
           </div>
-          <button 
-            onClick={handleSignOut}
-            className="btn btn-outline"
-            style={{ width: isMobile ? '100%' : 'auto' }}
-          >
-            Sign Out
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => setShowFeedbackModal(true)}
+              className="btn btn-outline"
+              style={{ width: isMobile ? 'auto' : 'auto' }}
+            >
+              💬 Feedback
+            </button>
+            <button 
+              onClick={handleSignOut}
+              className="btn btn-outline"
+              style={{ width: isMobile ? 'auto' : 'auto' }}
+            >
+              Sign Out
+            </button>
+          </div>
         </header>
 
         {/* Main Card */}
@@ -494,7 +516,7 @@ export const Settings: React.FC = () => {
                   boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)',
                 }}
               >
-                {loading ? '💾 Saving...' : '💾 Save Changes'}
+                {loading ? '⏳ Saving...' : '💾 Save Changes'}
               </button>
               <button
                 type="button"
@@ -513,6 +535,14 @@ export const Settings: React.FC = () => {
           </form>
         </div>
       </main>
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <FeedbackModal
+          onClose={() => setShowFeedbackModal(false)}
+          onSubmit={handleSubmitFeedback}
+        />
+      )}
     </div>
   );
 };
