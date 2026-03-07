@@ -190,14 +190,14 @@ export const Login: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="********"
                   disabled={loading}
                   style={{ width: '100%', padding: '0.625rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '0.875rem' }}
                 />
               </div>
 
               <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginBottom: '1rem' }}>
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? 'Signing in...⏳' : 'Sign in to Thrive'}
               </button>
             </>
           )}
