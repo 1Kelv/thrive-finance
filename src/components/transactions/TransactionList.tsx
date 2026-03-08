@@ -1,19 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Transaction } from '../../types';
 
 interface TransactionListProps {
   transactions: Transaction[];
   onDelete: (id: string) => void;
-  onEdit: (transaction: Transaction) => void;
   formatCurrency: (amount: number) => string;
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({ 
   transactions, 
   onDelete,
-  onEdit,
   formatCurrency 
 }) => {
+  const navigate = useNavigate();
+
   if (transactions.length === 0) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
@@ -73,7 +74,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 {formatCurrency(transaction.amount)}
               </span>
               <button
-                onClick={() => onEdit(transaction)}
+                onClick={() => navigate(`/transaction/edit/${transaction.id}`)}
                 style={{
                   padding: '0.25rem 0.5rem',
                   fontSize: '0.875rem',

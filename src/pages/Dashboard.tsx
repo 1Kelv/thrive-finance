@@ -46,7 +46,6 @@ export const Dashboard: React.FC = () => {
   
   const [selectedFraudTransaction, setSelectedFraudTransaction] = useState<Transaction | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Session timeout (10 minutes)
   useSessionTimeout(10);
@@ -122,20 +121,6 @@ export const Dashboard: React.FC = () => {
       setShowForm(false);
     } catch (error) {
       console.error('Error adding transaction:', error);
-      throw error;
-    }
-  };
-
-  const handleUpdateTransaction = async (transaction: TransactionFormData) => {
-    if (!editingTransaction) return;
-    
-    try {
-      await transactionService.updateTransaction(editingTransaction.id, transaction);
-      await loadTransactions();
-      setShowForm(false);
-      setEditingTransaction(null);
-    } catch (error) {
-      console.error('Error updating transaction:', error);
       throw error;
     }
   };
@@ -262,10 +247,7 @@ export const Dashboard: React.FC = () => {
                 💬 Feedback
               </button>
               <button 
-                onClick={() => {
-                  setEditingTransaction(null);
-                  setShowForm(!showForm);
-                }} 
+                onClick={() => setShowForm(!showForm)} 
                 className="btn btn-primary"
                 style={isMobile ? {} : { width: 'auto' }}
               >
@@ -288,12 +270,8 @@ export const Dashboard: React.FC = () => {
           {showForm && (
             <div style={{ marginBottom: '2rem' }}>
               <TransactionForm 
-                onSubmit={editingTransaction ? handleUpdateTransaction : handleAddTransaction}
-                onCancel={() => {
-                  setShowForm(false);
-                  setEditingTransaction(null);
-                }}
-                initialData={editingTransaction || undefined}
+                onSubmit={handleAddTransaction}
+                onCancel={() => setShowForm(false)}
               />
             </div>
           )}
@@ -360,10 +338,6 @@ export const Dashboard: React.FC = () => {
             <TransactionList 
               transactions={transactions}
               onDelete={handleDeleteTransaction}
-              onEdit={(transaction) => {
-                setEditingTransaction(transaction);
-                setShowForm(true);
-              }}
               formatCurrency={formatCurrency}
             />
           </div>

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { EditTransaction } from './pages/EditTransaction';
 import { Dashboard } from './pages/Dashboard';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { Logo } from './components/common/Logo';
@@ -24,6 +25,16 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route
+  path="/transaction/edit/:id"
+  element={
+    <ProtectedRoute>
+      <EditTransaction />
+    </ProtectedRoute>
+  }
+/>
+
+        
           <Route 
             path="/settings" 
             element={
