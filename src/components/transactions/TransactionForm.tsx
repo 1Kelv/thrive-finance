@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import type { TransactionFormData } from '../../types';
+import type { TransactionFormData, Transaction } from '../../types';
 
 interface TransactionFormProps {
   onSubmit: (transaction: TransactionFormData) => Promise<void>;
   onCancel: () => void;
+  initialData?: Transaction;
 }
 
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Other Income'];
 const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Healthcare', 'Other Expense'];
 
-export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCancel }) => {
+export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCancel, initialData }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -18,13 +19,21 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const [formData, setFormData] = useState<TransactionFormData>({
-    amount: 0,
-    category: '',
-    type: 'expense',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-  });
+  const [formData, setFormData] = useState<TransactionFormData>(
+    initialData ? {
+      amount: initialData.amount,
+      category: initialData.category,
+      type: initialData.type,
+      description: initialData.description,
+      date: initialData.date,
+    } : {
+      amount: 0,
+      category: '',
+      type: 'expense',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+    }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,7 +57,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
       setLoading(true);
       await onSubmit(formData);
     } catch (err) {
-      setError('Failed to add transaction');
+      setError(initialData ? 'Failed to update transaction' : 'Failed to add transaction');
       console.error(err);
     } finally {
       setLoading(false);
@@ -58,7 +67,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
   return (
     <div className="card">
       <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-        Add Transaction
+        {initialData ? '✏️ Edit Transaction' : '+ Add Transaction'}
       </h2>
 
       {error && (
@@ -184,7 +193,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, onCa
             className="btn btn-primary"
             style={{ flex: 1 }}
           >
-            {loading ? 'Adding...' : 'Add Transaction'}
+            {loading ? (initialData ? 'Updating...' : 'Adding...') : (initialData ? 'Update Transaction' : 'Add Transaction')}
           </button>
           <button
             type="button"

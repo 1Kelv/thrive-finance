@@ -39,7 +39,7 @@ export const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
@@ -124,6 +124,20 @@ export const Dashboard: React.FC = () => {
       throw error;
     }
   };
+
+  const handleUpdateTransaction = async (transaction: TransactionFormData) => {
+  if (!editingTransaction) return;
+  
+  try {
+    await transactionService.updateTransaction(editingTransaction.id, transaction);
+    await loadTransactions();
+    setShowForm(false);
+    setEditingTransaction(null);
+  } catch (error) {
+    console.error('Error updating transaction:', error);
+    throw error;
+  }
+};
 
   const handleDeleteTransaction = async (id: string) => {
     try {
@@ -246,6 +260,20 @@ export const Dashboard: React.FC = () => {
               >
                 💬 Feedback
               </button>
+              
+              {editingTransaction && (
+                <button 
+                  onClick={() => {
+                    setShowForm(true);
+                  }}
+                  className="btn btn-outline"
+                  style={isMobile ? {} : { width: 'auto' }}
+                >
+                  🔄 Edit Transaction
+                </button>
+              )}
+
+
               <button 
                 onClick={() => setShowForm(!showForm)} 
                 className="btn btn-primary"
@@ -275,6 +303,19 @@ export const Dashboard: React.FC = () => {
               />
             </div>
           )}
+          
+          {showForm && (
+  <div style={{ marginBottom: '2rem' }}>
+    <TransactionForm 
+      onSubmit={editingTransaction ? handleUpdateTransaction : handleAddTransaction}
+      onCancel={() => {
+        setShowForm(false);
+        setEditingTransaction(null);
+      }}
+      initialData={editingTransaction || undefined}
+    />
+  </div>
+)}
 
           {/* Fraud Alert */}
           {flaggedTransactions.length > 0 && (
@@ -338,6 +379,10 @@ export const Dashboard: React.FC = () => {
             <TransactionList 
               transactions={transactions}
               onDelete={handleDeleteTransaction}
+              onEdit={(transaction) => {
+                setEditingTransaction(transaction);
+                setShowForm(true);
+              }}    
               formatCurrency={formatCurrency}
             />
           </div>

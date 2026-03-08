@@ -4,12 +4,14 @@ import type { Transaction } from '../../types';
 interface TransactionListProps {
   transactions: Transaction[];
   onDelete: (id: string) => void;
+  onEdit: (transaction: Transaction) => void;
   formatCurrency: (amount: number) => string;
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({ 
   transactions, 
   onDelete,
+  onEdit,
   formatCurrency 
 }) => {
   if (transactions.length === 0) {
@@ -71,6 +73,20 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 {formatCurrency(transaction.amount)}
               </span>
               <button
+                onClick={() => onEdit(transaction)}
+                style={{
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.875rem',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-primary)',
+                }}
+                title="Edit transaction"
+              >
+                ✏️
+              </button>
+              <button
                 onClick={() => {
                   if (window.confirm('Delete this transaction?')) {
                     onDelete(transaction.id);
@@ -84,6 +100,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   cursor: 'pointer',
                   color: 'var(--color-danger)',
                 }}
+                title="Delete transaction"
               >
                 🗑️
               </button>

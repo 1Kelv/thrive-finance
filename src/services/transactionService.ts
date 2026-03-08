@@ -2,9 +2,7 @@ import { supabase } from '../lib/supabase';
 import type { Transaction, TransactionFormData } from '../types';
 import { analyzeTransaction } from '../utils/fraudDetection';
 
-
-export const transactionService = {
-  // Get all transactions for a user
+class TransactionService {
   async getTransactions(userId: string): Promise<Transaction[]> {
     const { data, error } = await supabase
       .from('transactions')
@@ -14,75 +12,65 @@ export const transactionService = {
 
     if (error) throw error;
     return data || [];
-  },
-
-  // Create a new transaction
-async createTransaction(
-  userId: string,
-  transaction: TransactionFormData
-): Promise<Transaction> {
-  // First, get existing transactions to analyze patterns
-  const existingTransactions = await this.getTransactions(userId);
-
-  // Create a temporary transaction object for analysis
-  const tempTransaction: Transaction = {
-    id: 'temp',
-    user_id: userId,
-    ...transaction,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  // Run fraud detection
-  const fraudAnalysis = analyzeTransaction(tempTransaction, existingTransactions);
-
-  // Insert transaction with fraud flag
-  const { data, error } = await supabase
-    .from('transactions')
-    .insert([
-      {
-        user_id: userId,
-        ...transaction,
-        is_fraud_flagged: fraudAnalysis.isFlagged,
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  // Log fraud detection results (may remove this in production)
-  if (fraudAnalysis.isFlagged) {
-    console.log('🚨 Fraud Alert:', {
-      transaction: data,
-      riskScore: fraudAnalysis.riskScore,
-      flags: fraudAnalysis.flags,
-    });
   }
 
-  return data;
-},
-  
-  // Update a transaction
-  async updateTransaction(
-    id: string,
-    updates: Partial<TransactionFormData>
-  ): Promise<Transaction> {
+  async createTransaction(userId: string, transaction: TransactionFormData): Promise<Transaction> {
+    // Get user's transaction history to check for fraud
+    const userTransactions = await this.getTransactions(userId);
+    
+    // Create a temporary transaction object for fraud detection
+    const tempTransaction: Transaction = {
+      id: 'temp',
+      user_id: userId,
+      amount: transaction.amount,
+      category: transaction.category,
+      type: transaction.type,
+      description: transaction.description,
+      date: transaction.date,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_fraud_flagged: false,
+    };
+
+    // Analyze fraud risk
+    const fraudAnalysis = analyzeTransaction(tempTransaction, userTransactions);
+    const isFraudFlagged = fraudAnalysis.isFlagged;
+
     const { data, error } = await supabase
       .from('transactions')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
+      .insert([
+        {
+          user_id: userId,
+          amount: transaction.amount,
+          category: transaction.category,
+          type: transaction.type,
+          description: transaction.description,
+          date: transaction.date,
+          is_fraud_flagged: isFraudFlagged,
+        },
+      ])
       .select()
       .single();
 
     if (error) throw error;
     return data;
-  },
+  }
 
-  // Delete a transaction
+  async updateTransaction(id: string, transaction: TransactionFormData): Promise<void> {
+    const { error } = await supabase
+      .from('transactions')
+      .update({
+        amount: transaction.amount,
+        category: transaction.category,
+        type: transaction.type,
+        description: transaction.description,
+        date: transaction.date,
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
   async deleteTransaction(id: string): Promise<void> {
     const { error } = await supabase
       .from('transactions')
@@ -90,33 +78,16 @@ async createTransaction(
       .eq('id', id);
 
     if (error) throw error;
-  },
+  }
 
-  // Mark transaction as safe (remove fraud flag)
-async markTransactionSafe(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('transactions')
-    .update({ is_fraud_flagged: false })
-    .eq('id', id);
-
-  if (error) throw error;
-},
-
-  // Get transactions by date range
-  async getTransactionsByDateRange(
-    userId: string,
-    startDate: string,
-    endDate: string
-  ): Promise<Transaction[]> {
-    const { data, error } = await supabase
+  async markTransactionSafe(id: string): Promise<void> {
+    const { error } = await supabase
       .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('date', startDate)
-      .lte('date', endDate)
-      .order('date', { ascending: false });
+      .update({ is_fraud_flagged: false })
+      .eq('id', id);
 
     if (error) throw error;
-    return data || [];
-  },
-};
+  }
+}
+
+export const transactionService = new TransactionService();
