@@ -74,7 +74,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 {formatCurrency(transaction.amount)}
               </span>
               <button
-                onClick={() => navigate(`/transaction/edit/${transaction.id}`)}
+                onClick={() => {
+                  console.log('Edit clicked, navigating to:', `/transaction/edit/${transaction.id}`);
+                  navigate(`/transaction/edit/${transaction.id}`);
+                }}
                 style={{
                   padding: '0.25rem 0.5rem',
                   fontSize: '0.875rem',
