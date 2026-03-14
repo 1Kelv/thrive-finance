@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from '../components/common/Logo';
@@ -79,7 +79,8 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleCreateBudget = async (budget: BudgetFormData) => {
+  // Memoised handlers with useCallback
+  const handleCreateBudget = useCallback(async (budget: BudgetFormData) => {
     try {
       await budgetService.createBudget(user!.id, budget);
       await loadBudgets();
@@ -89,9 +90,9 @@ export const Dashboard: React.FC = () => {
       console.error('Error creating budget:', error);
       throw error;
     }
-  };
+  }, [user]);
 
-  const handleUpdateBudget = async (budget: BudgetFormData) => {
+  const handleUpdateBudget = useCallback(async (budget: BudgetFormData) => {
     if (!editingBudget) return;
     
     try {
@@ -103,18 +104,18 @@ export const Dashboard: React.FC = () => {
       console.error('Error updating budget:', error);
       throw error;
     }
-  };
+  }, [editingBudget]);
 
-  const handleDeleteBudget = async (id: string) => {
+  const handleDeleteBudget = useCallback(async (id: string) => {
     try {
       await budgetService.deleteBudget(id);
       await loadBudgets();
     } catch (error) {
       console.error('Error deleting budget:', error);
     }
-  };
+  }, []);
 
-  const handleAddTransaction = async (transaction: TransactionFormData) => {
+  const handleAddTransaction = useCallback(async (transaction: TransactionFormData) => {
     try {
       await transactionService.createTransaction(user!.id, transaction);
       await loadTransactions();
@@ -123,82 +124,96 @@ export const Dashboard: React.FC = () => {
       console.error('Error adding transaction:', error);
       throw error;
     }
-  };
+  }, [user]);
 
-  const handleDeleteTransaction = async (id: string) => {
+  const handleDeleteTransaction = useCallback(async (id: string) => {
     try {
       await transactionService.deleteTransaction(id);
       await loadTransactions();
     } catch (error) {
       console.error('Error deleting transaction:', error);
     }
-  };
+  }, []);
 
-  const handleMarkTransactionSafe = async (id: string) => {
+  const handleMarkTransactionSafe = useCallback(async (id: string) => {
     try {
       await transactionService.markTransactionSafe(id);
       await loadTransactions();
     } catch (error) {
       console.error('Error marking transaction as safe:', error);
     }
-  };
+  }, []);
 
-  const handleSubmitFeedback = async (data: FeedbackData) => {
+  const handleSubmitFeedback = useCallback(async (data: FeedbackData) => {
     try {
       await feedbackService.submitFeedback(user!.id, user!.email!, data);
     } catch (error) {
       console.error('Error submitting feedback:', error);
       throw error;
     }
-  };
+  }, [user]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = useCallback(() => {
     exportToCSV(transactions, 'thrive-transactions.csv');
-  };
+  }, [transactions]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
     navigate('/login');
-  };
+  }, [signOut, navigate]);
 
-  // Calculate totals
-  const balance = transactions.reduce((sum, t) => {
-    return t.type === 'income' ? sum + t.amount : sum - t.amount;
-  }, 0);
+  // Memoised calculations
+  const { balance, totalIncome, totalExpenses } = useMemo(() => {
+    const balance = transactions.reduce((sum, t) => {
+      return t.type === 'income' ? sum + t.amount : sum - t.amount;
+    }, 0);
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    const totalExpenses = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
+    return { balance, totalIncome, totalExpenses };
+  }, [transactions]);
+
+  // Memoised currency formatter
+  const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: user?.user_metadata?.currency || 'GBP',
     }).format(amount);
-  };
+  }, [user?.user_metadata?.currency]);
 
-  // Get chart data
-  const incomeData = getCategoryBreakdown(
-    transactions.filter(t => t.type === 'income'),
-    'income'
-  );
-  const expenseData = getCategoryBreakdown(
-    transactions.filter(t => t.type === 'expense'),
-    'expense'
-  );
-  const monthlyTrends = getMonthlyTrends(transactions);
+  // Memoised chart data
+  const { incomeData, expenseData, monthlyTrends } = useMemo(() => {
+    const incomeData = getCategoryBreakdown(
+      transactions.filter(t => t.type === 'income'),
+      'income'
+    );
+    const expenseData = getCategoryBreakdown(
+      transactions.filter(t => t.type === 'expense'),
+      'expense'
+    );
+    const monthlyTrends = getMonthlyTrends(transactions);
 
-  // Calculate fraud detection data
-  const flaggedTransactions = transactions.filter(t => t.is_fraud_flagged);
-  const userRiskScore = calculateUserRiskScore(transactions);
+    return { incomeData, expenseData, monthlyTrends };
+  }, [transactions]);
 
-  // Calculate budget progress
-  const budgetProgressList = getAllBudgetProgress(budgets, transactions);
+  // Memoised fraud detection data
+  const { flaggedTransactions, userRiskScore } = useMemo(() => {
+    const flaggedTransactions = transactions.filter(t => t.is_fraud_flagged);
+    const userRiskScore = calculateUserRiskScore(transactions);
+
+    return { flaggedTransactions, userRiskScore };
+  }, [transactions]);
+
+  // Memoised budget progress
+  const budgetProgressList = useMemo(() => {
+    return getAllBudgetProgress(budgets, transactions);
+  }, [budgets, transactions]);
 
   if (loading) {
     return (

@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,31 +24,21 @@ export const Login: React.FC = () => {
       setError('');
       setLoading(true);
 
-      // Step 1: Sign in with email and password
       await signIn(email, password);
-
-      // Step 2: Get the current user
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         throw new Error('Login failed');
       }
 
-      // Store userId for OTP verification
       setUserId(user.id);
-
-      // Step 3: Check if 2FA is enabled
       const settings = await securityService.getSecuritySettings(user.id);
 
       if (settings?.two_factor_enabled) {
-        // Generate and save OTP
         const code = securityService.generateOTP();
         await securityService.saveOTP(user.id, code);
-        
-        // Show OTP input
         setShowOtpInput(true);
       } else {
-        // No 2FA, proceed to dashboard
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -166,15 +157,38 @@ export const Login: React.FC = () => {
               }}>
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="********"
-                required
-                disabled={loading}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  disabled={loading}
+                  style={{ paddingRight: '3rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '1.25rem',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
 
             <button
